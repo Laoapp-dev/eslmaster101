@@ -26,7 +26,7 @@ export default defineConfig({
   // serving an old cached build.
   define: {
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-    __APP_VERSION__: JSON.stringify('1.2.0'),
+    __APP_VERSION__: JSON.stringify('1.3.0'),
   },
   plugins: [
     react(),
@@ -46,8 +46,8 @@ export default defineConfig({
         'icons/icon-512-maskable.png',
       ],
       manifest: {
-        name: 'ESL Master Vocab',
-        short_name: 'ESL Vocab',
+        name: 'ESLmaster101',
+        short_name: 'ESLmaster101',
         description: 'Master English vocabulary with flashcards, quizzes, matching, spelling, and more.',
         theme_color: '#1A1A2E',
         background_color: '#1A1A2E',
@@ -73,7 +73,7 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             form_factor: 'narrow',
-            label: 'ESL Master Vocab — Vocabulary Learning',
+            label: 'ESLmaster101 — Vocabulary Learning',
           },
         ],
         categories: ['education', 'productivity'],
