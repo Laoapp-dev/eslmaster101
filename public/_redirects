@@ -1,0 +1,12 @@
+# Cloudflare Pages SPA fallback.
+# https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# This app uses HashRouter (routes are /#/dashboard, not /dashboard), so
+# every real in-app navigation already resolves to a single static file
+# (index.html) without any server-side help. This rule only matters as a
+# safety net for a mistyped/old-style deep link without the #, or any
+# other path that isn't an actual file in dist/ — instead of Cloudflare's
+# generic 404 page, it serves index.html (which then boots the app
+# normally). Cloudflare only applies this when no real static file matches
+# the request first, so it never shadows actual assets.
+/*  /index.html  200

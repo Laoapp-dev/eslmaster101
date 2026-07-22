@@ -1,0 +1,29 @@
+# Cloudflare Pages custom headers.
+# https://developers.cloudflare.com/pages/configuration/headers/
+#
+# WHY THIS FILE MATTERS: this app is a PWA with a service worker that
+# auto-updates itself, but that ONLY works correctly if the browser is
+# actually allowed to check for a new index.html/sw.js on every visit.
+# Cloudflare's default edge caching is more aggressive than GitHub Pages'
+# for static assets, which — without these rules — can make a "stuck on
+# an old cached version" boot problem WORSE, not better, on Cloudflare.
+
+# Never cache the HTML shell or the service worker/registration files —
+# every visit must be able to see a fresh deploy immediately.
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/registerSW.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/manifest.webmanifest
+  Cache-Control: no-cache, must-revalidate
+
+# Hashed build assets (index-XXXXXXXX.js, etc.) are safe to cache
+# aggressively and forever — Vite gives each build a new hash, so an old
+# cached copy can never be served for a NEW deploy by mistake.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,0 +1,16 @@
+# Cloudflare Pages config.
+# Used by `wrangler pages deploy dist` for manual/local deploys, and by the
+# `.github/workflows/deploy-cloudflare.yml` Action for automatic deploys on
+# every push. Not required if you connect this repo to Cloudflare Pages
+# directly in the dashboard instead (Cloudflare auto-detects the Vite
+# framework preset — build command `npm run build`, output dir `dist`) —
+# pick ONE of the two setup methods, not both, to avoid duplicate deploys.
+# Full setup: see the "Deploying" section in README.md.
+
+name = "esl-master-vocab"
+# ⚠️ If you already deployed a Cloudflare Pages project under the OLD name
+# ("esl-learning"), keep using that exact name here to keep updating the
+# SAME live site/URL. Changing it to "esl-master-vocab" creates a brand
+# new project with a new *.pages.dev URL instead of renaming the old one.
+pages_build_output_dir = "dist"
+compatibility_date = "2024-09-23"
