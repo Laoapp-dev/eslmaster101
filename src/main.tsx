@@ -20,7 +20,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 // Fix: force a one-time full reload the moment a new service worker takes
 // control, so the running app always matches the active service worker.
 // eslint-disable-next-line no-console
-console.log('[ESL Master Vocab] build:', typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'dev');
+console.log('[ESLmaster101] build:', typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'dev');
 
 if ('serviceWorker' in navigator) {
   // IMPORTANT: an in-memory flag (`let refreshing = false`) does NOT protect

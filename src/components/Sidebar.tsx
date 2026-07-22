@@ -47,11 +47,11 @@ export function Sidebar({ profile, currentStreak }: SidebarProps) {
       <div className="flex items-center gap-2.5 px-5 py-5 flex-shrink-0">
         {/* Owl mascot mini */}
         <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 shadow-sm ring-1 ring-white/20">
-          <img src="./icons/icon-192.png" alt="ESL Master Vocab" className="w-full h-full object-cover" />
+          <img src="./icons/icon-192.png" alt="ESLmaster101" className="w-full h-full object-cover" />
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[15px] font-black tracking-tight text-white leading-none font-display">
-            ESL Master Vocab
+            ESLmaster101
           </span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#00B4D8] self-start mt-0.5 flex-shrink-0 animate-pulse" />
         </div>
