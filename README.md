@@ -1,15 +1,21 @@
-# ESL Master Vocab
+# ESLmaster101
 
-A simple, light, fast ESL vocabulary learning webapp — **9,311 words**
+A simple, light, fast ESL vocabulary learning webapp — **9,000+ words**
 bundled directly into the app, no server, no external accounts, no data
 sync of any kind.
 
 ## What's inside
 
-- **9,311-word ESL curriculum** (`src/data/defaultVocabulary.json`) shipped
-  straight in the app's code — CEFR levels A1–C2, definitions, example
-  sentences, synonyms/antonyms, categories, and Lao/Thai translations.
-  Loaded into memory on open; never fetched from a network, never synced.
+- **9,000+-word ESL curriculum** (`src/data/defaultVocabulary.json`) shipped
+  straight in the app's code, grouped into 16 topic categories (Describing
+  People, Common Actions/Verbs, Work/Study/Technology, Places & Locations,
+  Body Parts & Health, People/Family/Relationships, Policy & Governance,
+  Weather & Nature, Money & Commerce, Time & Sequences, Food & Drink,
+  Environment & Ecology, Economy & Finance, Agriculture & Farming, Climate
+  & Atmospheric Dynamics, and Forestry & Land Management) — CEFR levels
+  A1–C2, definitions, example sentences, synonyms/antonyms, and Lao/Thai
+  translations. Loaded into memory on open; never fetched from a network,
+  never synced.
 - **Flashcards, Quiz, Matching, and Spelling** study modes.
 - **Writing & Speaking Practice** with optional AI scoring/feedback
   (Google Gemini) and AI voice playback (ElevenLabs) — both configured
@@ -63,22 +69,14 @@ simpler local scoring instead of AI feedback.
 
 ## Deploying
 
-Three deploy targets are pre-configured — pick any one, or run more than
-one at once:
+This app is set up for **GitHub Pages only**:
 
-- **GitHub Pages** — `.github/workflows/deploy.yml`. Push to `main` and
-  it builds and deploys automatically (uses the GitHub Actions Pages
-  flow — enable it once under repo Settings → Pages → Source → "GitHub
-  Actions").
-- **Vercel** — `vercel.json` is included. Import the repo at
-  [vercel.com/new](https://vercel.com/new) (auto-detects Vite — build
-  command `npm run build`, output `dist`) or run `vercel --prod` from
-  the CLI. No environment variables needed.
-- **Cloudflare Pages** — `.github/workflows/deploy-cloudflare.yml` (needs
-  two repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`).
+- `.github/workflows/deploy.yml` — push to `main` and it builds and
+  deploys automatically via the GitHub Actions Pages flow (enable it once
+  under repo Settings → Pages → Source → "GitHub Actions").
 
-No secrets or environment variables are required for GitHub Pages or
-Vercel, since the app has no external data sync.
+No secrets or environment variables are required, since the app has no
+external data sync.
 
 ## Tech stack
 
