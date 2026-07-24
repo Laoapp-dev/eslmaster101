@@ -35,7 +35,12 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        # `npm ci` (not `npm install`) so this Action installs from the
+        # committed package-lock.json exactly the same way Cloudflare
+        # Pages' own build environment does — catching any lockfile drift
+        # here instead of only discovering it on a Cloudflare deploy.
+        # legacy-peer-deps is set in .npmrc, which `npm ci` also reads.
+        run: npm ci
 
       # Works around a known npm bug (npm/cli#4828) where npm sometimes
       # skips installing Rollup's platform-specific native binary on a
@@ -47,7 +52,7 @@ jobs:
         run: |
           if [ ! -d "node_modules/@rollup/rollup-linux-x64-gnu" ]; then
             echo "Rollup native binary missing — installing it explicitly"
-            npm install @rollup/rollup-linux-x64-gnu@4 --no-save --legacy-peer-deps
+            npm install @rollup/rollup-linux-x64-gnu@4 --no-save
           else
             echo "Rollup native binary already present"
           fi
@@ -55,7 +60,7 @@ jobs:
       - name: Build
         # The D1 database binding (name "DB") that /functions/api/* needs
         # is NOT set here — it's configured once in the Cloudflare
-        # dashboard under Pages project → Settings → Functions → D1
+        # dashboard under Pages project → Settings → Bindings → Add → D1
         # database bindings (or via wrangler.toml if you deploy with
         # `wrangler pages deploy` instead of this Action). See
         # CLOUDFLARE_DEPLOY.md.
