@@ -24,9 +24,13 @@ compatibility_flags = ["nodejs_compat"]
 # which prints back the values to paste in below. If you're connecting
 # the repo to Cloudflare Pages via the dashboard instead of `wrangler`
 # CLI deploys, add this same D1 binding under
-# Pages project → Settings → Functions → D1 database bindings instead —
-# whichever binding source you use, the binding name must be "DB".
+# Pages project → Settings → Bindings → Add → D1 database bindings
+# instead — whichever binding source you use, the binding name must be "DB".
 [[d1_databases]]
 binding = "DB"
 database_name = "esl-master-vocab-db"
 database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+# Same database used for both preview and production deploys (fine for a
+# single-site project). This field is also what lets `wrangler pages dev`
+# find the right database for local development without extra CLI flags.
+preview_database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

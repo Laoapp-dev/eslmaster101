@@ -22,13 +22,16 @@ npx wrangler d1 create esl-master-vocab-db
 ```
 
 This prints a `database_id`. Copy it into `wrangler.toml`, replacing
-`REPLACE_WITH_YOUR_D1_DATABASE_ID`:
+**both** `REPLACE_WITH_YOUR_D1_DATABASE_ID` placeholders
+(`database_id` and `preview_database_id` — using the same real ID for
+both is fine for a single-database project):
 
 ```toml
 [[d1_databases]]
 binding = "DB"
 database_name = "esl-master-vocab-db"
 database_id = "paste-the-real-id-here"
+preview_database_id = "paste-the-real-id-here"
 ```
 
 ## 3. Run the schema migration
@@ -50,11 +53,21 @@ frontend + Functions + a local D1 — on your machine before deploying.)
 3. Framework preset: **Vite**. Build command: `npm run build`. Build
    output directory: `dist`. Leave everything else default.
 4. After the first deploy, go to the new project →
-   **Settings → Functions → D1 database bindings → Add binding**.
+   **Settings → Bindings → Add → D1 database bindings**.
    Variable name **must** be `DB` (that's what every file under
    `/functions/api` expects), and point it at `esl-master-vocab-db`.
+   Do this for both the **Production** and **Preview** environments.
 5. Trigger a redeploy (Deployments → ⋯ → Retry deployment) so the new
    binding takes effect.
+
+> **If a binding you set in `wrangler.toml` doesn't seem to apply**
+> when deploying via a connected Git repo: Pages only reads bindings
+> from `wrangler.toml` on projects using the newer "v2" build system
+> (Settings → Builds → build system version). If yours predates that,
+> or the setting is unclear, just add the D1 binding directly via
+> **Settings → Bindings** as in step 4 above — that always works
+> regardless of build system version, and is the most reliable option
+> when deploying through the dashboard rather than the CLI.
 
 **Alternative — deploy from the CLI instead of the dashboard:**
 ```bash
