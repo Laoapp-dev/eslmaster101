@@ -1,0 +1,75 @@
+name: Deploy to Cloudflare Pages
+
+# This is an ALTERNATIVE to deploy.yml (GitHub Pages) — either works on
+# its own, or both can run side by side (e.g. GitHub Pages as a mirror).
+# Requires two repo secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+#
+# If you'd rather not manage secrets/Actions at all: connect this repo to
+# Cloudflare Pages directly in the Cloudflare dashboard instead (Workers &
+# Pages → Create → Pages → Connect to Git). Cloudflare then builds and
+# deploys automatically on every push with zero YAML — pick that OR this
+# workflow, not both, to avoid two competing deploys of the same site.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      # Works around a known npm bug (npm/cli#4828) where npm sometimes
+      # skips installing Rollup's platform-specific native binary on a
+      # fresh install, which makes `vite build` fail deep inside Rollup's
+      # own module loading. Checks whether it's actually present and
+      # force-installs it only if it's missing — a no-op on a healthy
+      # install.
+      - name: Ensure Rollup native binary is present
+        run: |
+          if [ ! -d "node_modules/@rollup/rollup-linux-x64-gnu" ]; then
+            echo "Rollup native binary missing — installing it explicitly"
+            npm install @rollup/rollup-linux-x64-gnu@4 --no-save --legacy-peer-deps
+          else
+            echo "Rollup native binary already present"
+          fi
+
+      - name: Build
+        # The D1 database binding (name "DB") that /functions/api/* needs
+        # is NOT set here — it's configured once in the Cloudflare
+        # dashboard under Pages project → Settings → Functions → D1
+        # database bindings (or via wrangler.toml if you deploy with
+        # `wrangler pages deploy` instead of this Action). See
+        # CLOUDFLARE_DEPLOY.md.
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # ⚠️ Must exactly match an existing Cloudflare Pages project name.
+          # If you already have a live project called "esl-learning", put
+          # that name here instead — changing it creates a NEW project with
+          # a new *.pages.dev URL rather than updating the existing site.
+          projectName: esl-master-vocab
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
