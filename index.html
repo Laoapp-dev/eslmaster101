@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- PWA / install metadata -->
-    <meta name="theme-color" content="#1A1A2E" />
+    <meta name="theme-color" content="#F5A623" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="ESLmaster101" />
-    <meta name="application-name" content="ESLmaster101" />
-    <meta name="description" content="ESLmaster101 – Level up your English with flashcards, quizzes, matching games and more." />
+    <meta name="apple-mobile-web-app-title" content="ESL Master Vocab" />
+    <meta name="application-name" content="ESL Master Vocab" />
+    <meta name="description" content="ESL Master Vocab – Level up your English with flashcards, quizzes, matching games and more." />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="ESLmaster101 – Learn English" />
-    <meta property="og:description" content="Level up your English with ESLmaster101 – the fun vocabulary app." />
+    <meta property="og:title" content="ESL Master Vocab – Learn English" />
+    <meta property="og:description" content="Level up your English with ESL Master Vocab – the fun vocabulary app." />
     <meta property="og:image" content="./icons/icon-512.png" />
     <meta property="og:type" content="website" />
 
@@ -29,7 +29,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
 
-    <title>ESLmaster101 – Learn English</title>
+    <title>ESL Master Vocab – Learn English</title>
   </head>
   <body>
     <div id="root"></div>
@@ -105,19 +105,6 @@
           var root = document.getElementById('root');
           // If React ever mounted anything, #root has children — don't show.
           if (root && root.children.length > 0) return;
-
-          // Nothing rendered after 6s and no specific resource-load error or
-          // rejected dynamic import was caught above (those already trigger
-          // an immediate recovery on their own). This is the catch-all: any
-          // OTHER cause of a hung boot — a stale/broken cached service
-          // worker response, a script that loaded but silently hung, etc —
-          // still deserves the SAME one-shot automatic recovery attempt
-          // rather than making the person figure out and tap the button
-          // themselves. The sessionStorage guard inside
-          // clearCachesAndReload() already caps this to once per tab
-          // session, so this can't loop.
-          if (clearCachesAndReload()) return;
-
           var overlay = document.createElement('div');
           overlay.setAttribute('id', 'esl-boot-fallback');
           overlay.style.cssText = 'position:fixed;inset:0;background:#1A1A2E;color:#fff;' +

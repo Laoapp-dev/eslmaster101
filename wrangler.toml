@@ -5,7 +5,7 @@
 # directly in the dashboard instead (Cloudflare auto-detects the Vite
 # framework preset — build command `npm run build`, output dir `dist`) —
 # pick ONE of the two setup methods, not both, to avoid duplicate deploys.
-# Full setup: see the "Deploying" section in README.md.
+# See CLOUDFLARE_DEPLOY.md for the full setup guide.
 
 name = "esl-master-vocab"
 # ⚠️ If you already deployed a Cloudflare Pages project under the OLD name
@@ -14,3 +14,19 @@ name = "esl-master-vocab"
 # new project with a new *.pages.dev URL instead of renaming the old one.
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 database binding used by every function under /functions/api — this
+# is what makes accounts, progress, and lessons sync across devices.
+# `binding` MUST stay "DB" (functions/api/_lib/helpers.ts's Env type
+# expects env.DB). `database_name`/`database_id` come from running:
+#   wrangler d1 create esl-master-vocab-db
+# which prints back the values to paste in below. If you're connecting
+# the repo to Cloudflare Pages via the dashboard instead of `wrangler`
+# CLI deploys, add this same D1 binding under
+# Pages project → Settings → Functions → D1 database bindings instead —
+# whichever binding source you use, the binding name must be "DB".
+[[d1_databases]]
+binding = "DB"
+database_name = "esl-master-vocab-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
