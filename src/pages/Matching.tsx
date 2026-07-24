@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { RotateCcw, Clock, Zap, Puzzle, Lock } from 'lucide-react';
 import { useApp } from '@/App';
 import type { CEFRLevel } from '@/types/vocabulary';
-import { getMasteryPct, isLevelUnlocked, getPretestLevel, UNLOCK_PCT, randomSessionSize, pickDiverseSample } from '@/lib/levelLock';
+import { getMasteryPct, isLevelUnlocked, usePretestLevel, UNLOCK_PCT, randomSessionSize, pickDiverseSample } from '@/lib/levelLock';
 
 // Total *cards* per game (each word contributes 2 cards: word + definition),
 // so this yields 5-10 word pairs per session.
@@ -21,7 +21,7 @@ interface GameCard {
 
 export function Matching() {
   const { vocabulary, addToast } = useApp();
-  const pretestLevel = getPretestLevel();
+  const pretestLevel = usePretestLevel();
   const [selectedLevel, setSelectedLevel] = useState<CEFRLevel | 'all'>('all');
   const [showSetup, setShowSetup] = useState(true);
   const [cards, setCards] = useState<GameCard[]>([]);

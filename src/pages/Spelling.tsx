@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, CheckCircle, XCircle, ArrowRight, Keyboard, Flame, Lock } from 'lucide-react';
 import { useApp } from '@/App';
 import { useSpeech } from '@/hooks/useSpeech';
+import { cloudStorage } from '@/lib/cloudStorage';
 import type { VocabularyWord, CEFRLevel } from '@/types/vocabulary';
-import { getMasteryPct, isLevelUnlocked, getPretestLevel, UNLOCK_PCT, randomSessionSize, pickDiverseSample } from '@/lib/levelLock';
+import { getMasteryPct, isLevelUnlocked, usePretestLevel, UNLOCK_PCT, randomSessionSize, pickDiverseSample } from '@/lib/levelLock';
 
 const MIN_WORDS = 10;
 const MAX_WORDS = 20;
@@ -12,7 +13,7 @@ const MAX_WORDS = 20;
 export function Spelling() {
   const { vocabulary, addToast } = useApp();
   const { speak } = useSpeech();
-  const pretestLevel = getPretestLevel();
+  const pretestLevel = usePretestLevel();
   const [selectedLevel, setSelectedLevel] = useState<CEFRLevel | 'all'>('all');
   const [showSetup, setShowSetup] = useState(true);
   const [currentWord, setCurrentWord] = useState<VocabularyWord | null>(null);
@@ -21,7 +22,7 @@ export function Spelling() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(() => {
-    const saved = localStorage.getItem('lexicon_best_streak');
+    const saved = cloudStorage.getItem('lexicon_best_streak');
     return saved ? parseInt(saved) : 0;
   });
   const [totalAnswered, setTotalAnswered] = useState(0);
@@ -109,7 +110,7 @@ export function Spelling() {
       if (newStreak > bestStreak) {
         setBestStreak(newStreak);
         try {
-          localStorage.setItem('lexicon_best_streak', newStreak.toString());
+          cloudStorage.setItem('lexicon_best_streak', newStreak.toString());
         } catch { /* storage full — streak still tracked in memory for this session */ }
       }
 

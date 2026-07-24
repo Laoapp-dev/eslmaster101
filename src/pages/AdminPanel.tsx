@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/App';
+import { adminConfig } from '@/lib/adminConfig';
 import type { AuthUser } from '@/types/auth';
 
 // ── Tiny helpers ────────────────────────────────────────────────────────────────
@@ -34,8 +35,6 @@ function WarnBox({ children }: { children: React.ReactNode }) {
 }
 
 type Tab = 'users' | 'aikeys';
-
-const ADMIN_API_KEYS_KEY = 'moe_admin_api_cfg';
 
 // ── Admin Panel ─────────────────────────────────────────────────────────────────
 // Deliberately minimal: this app has no server, no external accounts to
@@ -65,8 +64,7 @@ export function AdminPanel() {
     else { setConfirmDelete(id); setTimeout(() => setConfirmDelete(null), 3000); }
   };
 
-  // ── Reset actions (Danger Zone) — all local to this device, nothing to
-  // reconcile with a server since there's no external sync anymore. ─────────
+  // ── Reset actions (Danger Zone) ──────────────────────────────────────────
   const handleResetProgress = () => {
     if (resetConfirm !== 'progress') {
       setResetConfirm('progress');
@@ -87,6 +85,9 @@ export function AdminPanel() {
       return;
     }
     setResetting(true);
+    // Wipe this account's cloud data (words/progress/sessions/settings)
+    // in Cloudflare D1, not just whatever this browser has cached.
+    try { await fetch('/api/data', { method: 'DELETE', credentials: 'include' }); } catch { /* ignore */ }
     try { localStorage.clear(); } catch { /* ignore */ }
     try { sessionStorage.clear(); } catch { /* ignore */ }
     try {
@@ -112,26 +113,29 @@ export function AdminPanel() {
     window.location.href = window.location.origin + window.location.pathname;
   };
 
-  // AI API Keys state (admin-only, stored under protected key)
-  const loadAiCfg = () => { try { return JSON.parse(localStorage.getItem(ADMIN_API_KEYS_KEY) || '{}'); } catch { return {}; } };
-  const [aiGoogleKey,   setAiGoogleKey]   = useState<string>(() => loadAiCfg().google      || '');
-  const [aiElevenKey,   setAiElevenKey]   = useState<string>(() => loadAiCfg().elevenlabs  || '');
-  const [aiElevenVoice, setAiElevenVoice] = useState<string>(() => loadAiCfg().elevenVoice || 'JBFqnCBsd6RMkjVDRZzb');
+  // AI API Keys state — shared across every learner's account, stored in
+  // Cloudflare D1 (functions/api/config), not this browser only.
+  const [aiGoogleKey,   setAiGoogleKey]   = useState<string>(() => adminConfig.get().google);
+  const [aiElevenKey,   setAiElevenKey]   = useState<string>(() => adminConfig.get().elevenlabs);
+  const [aiElevenVoice, setAiElevenVoice] = useState<string>(() => adminConfig.get().elevenVoice);
   const [aiKeySaved,    setAiKeySaved]    = useState(false);
+  const [aiKeySaving,   setAiKeySaving]   = useState(false);
   const [showAiKeys,    setShowAiKeys]    = useState<Record<string, boolean>>({});
   const toggleShowKey = (k: string) => setShowAiKeys(prev => ({ ...prev, [k]: !prev[k] }));
 
-  const saveAiKeys = () => {
-    try {
-      localStorage.setItem(ADMIN_API_KEYS_KEY, JSON.stringify({
-        google:      aiGoogleKey.trim(),
-        elevenlabs:  aiElevenKey.trim(),
-        elevenVoice: aiElevenVoice.trim() || 'JBFqnCBsd6RMkjVDRZzb',
-      }));
+  const saveAiKeys = async () => {
+    setAiKeySaving(true);
+    const res = await adminConfig.save({
+      google:      aiGoogleKey.trim(),
+      elevenlabs:  aiElevenKey.trim(),
+      elevenVoice: aiElevenVoice.trim() || 'JBFqnCBsd6RMkjVDRZzb',
+    });
+    setAiKeySaving(false);
+    if (res.success) {
       setAiKeySaved(true);
       setTimeout(() => setAiKeySaved(false), 2500);
-    } catch (error) {
-      addToast(`Couldn't save API keys — browser storage may be full: ${(error as Error).message}`, 'error');
+    } else {
+      addToast(`Couldn't save API keys: ${res.error || 'unknown error'}`, 'error');
     }
   };
 
@@ -252,10 +256,10 @@ export function AdminPanel() {
             <div className="border-t border-red-100 dark:border-red-900 pt-4 space-y-2">
               <p className="text-sm text-foreground font-medium">Full factory reset (clears login too)</p>
               <p className="text-xs text-muted-foreground">
-                This app has no external server or account service — your login session,
-                vocabulary progress, and admin settings all live in this browser only. This wipes
-                ALL of it (localStorage, cached files, the service worker) and signs you out,
-                exactly like a fresh install. Only affects this device.
+                Your account, vocabulary progress, and settings live in Cloudflare D1, so they
+                sync across every device you sign into. This deletes your cloud data for this
+                account, then wipes everything cached on this device (localStorage, cached files,
+                the service worker) and signs you out, exactly like a fresh install.
               </p>
               <button onClick={handleFactoryReset} disabled={resetting}
                 className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${
@@ -401,22 +405,24 @@ export function AdminPanel() {
           </div>
 
           {/* Save button */}
-          <button onClick={saveAiKeys}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#F5A623] text-white text-sm font-bold hover:bg-[#E09400] active:scale-[0.98] transition-all">
-            {aiKeySaved
-              ? <><CheckCircle2 className="h-4 w-4" /> All Keys Saved!</>
-              : <><Zap className="h-4 w-4" /> Save All AI Keys</>}
+          <button onClick={saveAiKeys} disabled={aiKeySaving}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#F5A623] text-white text-sm font-bold hover:bg-[#E09400] active:scale-[0.98] transition-all disabled:opacity-60">
+            {aiKeySaving
+              ? <><Spinner /> Saving…</>
+              : aiKeySaved
+                ? <><CheckCircle2 className="h-4 w-4" /> All Keys Saved!</>
+                : <><Zap className="h-4 w-4" /> Save All AI Keys</>}
           </button>
 
           <InfoBox>
             <Info className="h-4 w-4 shrink-0 mt-0.5" />
             <div>
-              <strong>User privacy:</strong> Keys are stored under a protected admin key (<code className="bg-blue-100 px-1 rounded text-xs">moe_admin_api_cfg</code>) and are never shown in any user-facing UI, settings pages, or Practice screens.
+              <strong>User privacy:</strong> Keys are stored in Cloudflare D1, shared by every learner's account, and are never shown in any user-facing UI, settings pages, or Practice screens.
             </div>
           </InfoBox>
           <WarnBox>
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-            <div>Keys are stored in this browser's <code className="bg-amber-100 px-1 rounded text-xs">localStorage</code>. For production, use a backend secrets manager. Never share admin login credentials.</div>
+            <div>Keys are stored in your Cloudflare D1 database, readable by any signed-in learner's browser (to call the AI providers directly) but never shown in the UI. For production, consider a server-side proxy instead. Never share admin login credentials.</div>
           </WarnBox>
         </motion.div>
       )}

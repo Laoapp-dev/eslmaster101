@@ -6,7 +6,6 @@ import { useAuth, AuthProvider } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { ToastContainer } from '@/components/ToastContainer';
-import { AuthPage } from '@/pages/AuthPage';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────────
 // Every page below is its own separate JS chunk, loaded on demand instead of
@@ -30,10 +29,19 @@ const AdminPanel     = lazy(() => import('@/pages/AdminPanel').then(m => ({ defa
 const UserDashboard  = lazy(() => import('@/pages/UserDashboard').then(m => ({ default: m.UserDashboard })));
 const PreTest        = lazy(() => import('@/pages/PreTest').then(m => ({ default: m.PreTest })));
 const Practice       = lazy(() => import('@/pages/Practice').then(m => ({ default: m.Practice })));
+const AuthPage       = lazy(() => import('@/pages/AuthPage').then(m => ({ default: m.AuthPage })));
 
 function PageLoading() {
   return (
     <div className="flex h-full min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 border-[3px] border-[#1A1A2E]/20 border-t-[#1A1A2E] rounded-full animate-spin" />
+    </div>
+  );
+}
+
+function FullScreenLoading() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-background">
       <div className="h-8 w-8 border-[3px] border-[#1A1A2E]/20 border-t-[#1A1A2E] rounded-full animate-spin" />
     </div>
   );
@@ -51,37 +59,21 @@ export function useApp() {
   return ctx;
 }
 
-function AppInner() {
-  const { currentUser, isAuthenticated, isLoading } = useAuth();
-  const vocabulary = useVocabulary(currentUser?.dataKey);
+// Mounted only once a user is confirmed signed in AND their cloud data
+// blob has already been fetched into cloudStorage (useAuth awaits that
+// before it ever sets currentUser) — so useVocabulary's synchronous
+// `useState(() => loadFromStorage(...))` initializers see real data
+// immediately instead of racing an in-flight network request.
+function AppShell({ currentUser }: { currentUser: NonNullable<ReturnType<typeof useAuth>['currentUser']> }) {
+  const vocabulary = useVocabulary();
   const { toasts, addToast, removeToast } = useToast();
 
-  // Surface warnings bubbled up from useVocabulary as toasts — the hook
-  // itself has no UI, so App.tsx is where these become visible.
   useEffect(() => {
     if (vocabulary.storageWarning) {
       addToast(vocabulary.storageWarning, 'error');
       vocabulary.clearStorageWarning();
     }
   }, [vocabulary.storageWarning]); // eslint-disable-line
-
-  // ── Everything lives on this device ──────────────────────────────────────
-  // No GitHub sync, no Google Sheet sync, no CSV/JSON import, no network
-  // calls at all for vocabulary data. The full 9,000+ word curriculum
-  // (src/data/defaultVocabulary.json) is bundled straight into the app —
-  // see the `baseWords` load effect in useVocabulary.ts — and each
-  // learner's own words/progress are kept in this browser's localStorage
-  // only, under their own account key.
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 border-[3px] border-[#1A1A2E]/20 border-t-[#1A1A2E] rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return <AuthPage />;
 
   return (
     <AppContext.Provider value={{ vocabulary, addToast }}>
@@ -109,7 +101,7 @@ function AppInner() {
                 <Route path="/profile"       element={<Profile />} />
                 <Route path="/my-account"    element={<UserDashboard />} />
                 <Route path="/practice"      element={<Practice />} />
-                {currentUser?.role === 'admin' && (
+                {currentUser.role === 'admin' && (
                   <Route path="/admin" element={<AdminPanel />} />
                 )}
               </Routes>
@@ -121,6 +113,29 @@ function AppInner() {
       </div>
     </AppContext.Provider>
   );
+}
+
+function AppInner() {
+  const { currentUser, isAuthenticated, isLoading } = useAuth();
+
+  // ── Where data lives now ─────────────────────────────────────────────────
+  // Accounts and every learner's own words/progress/sessions/settings sync
+  // through Cloudflare D1 (see /functions/api) instead of this browser's
+  // localStorage, so the same account works identically on any device.
+  // The 9,000+ word base curriculum is still bundled straight into the app
+  // (public/data/vocabulary.json) since it's shared, read-only content.
+
+  if (isLoading) return <FullScreenLoading />;
+
+  if (!isAuthenticated || !currentUser) {
+    return (
+      <Suspense fallback={<FullScreenLoading />}>
+        <AuthPage />
+      </Suspense>
+    );
+  }
+
+  return <AppShell currentUser={currentUser} />;
 }
 
 export default function App() {

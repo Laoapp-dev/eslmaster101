@@ -16,16 +16,10 @@
 
 import type { AIFeedback } from '@/types/practice';
 import type { CEFRLevel } from '@/data/speakingTopics';
-
-const ADMIN_API_KEYS_KEY = 'moe_admin_api_cfg';
+import { adminConfig } from '@/lib/adminConfig';
 
 function getAdminKeys(): { google?: string } {
-  try {
-    const raw = localStorage.getItem(ADMIN_API_KEYS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  return { google: adminConfig.get().google };
 }
 
 /** Calls Gemini with a system + user prompt. Tries a few model names for resilience. */
@@ -176,7 +170,7 @@ export function hasGeminiKey(): boolean {
  *
  * Builds a short mini-lesson + multiple-choice quiz from a batch of words
  * out of the app's built-in 9,000+ word database (see useVocabulary.ts /
- * src/data/defaultVocabulary.json). Uses the same admin-configured Gemini
+ * public/data/vocabulary.json). Uses the same admin-configured Gemini
  * key as writing/speaking evaluation above. Always works even with no key
  * set — it falls back to building the quiz directly from the words' own
  * definitions/synonyms/antonyms, just without the AI-written intro blurb.

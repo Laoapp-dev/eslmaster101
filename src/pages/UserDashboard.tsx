@@ -58,17 +58,15 @@ export function UserDashboard() {
     setEditing(false);
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!newPw || !currentPw) { addToast('Fill all password fields', 'error'); return; }
     if (newPw !== confirmPw)   { addToast('Passwords do not match', 'error');  return; }
     if (newPw.length < 6)      { addToast('Minimum 6 characters', 'error');    return; }
     setPwLoading(true);
-    setTimeout(() => {
-      const r = changePassword(currentPw, newPw);
-      if (r.success) { addToast('Password changed', 'success'); setCurrentPw(''); setNewPw(''); setConfirmPw(''); }
-      else            { addToast(r.error || 'Failed', 'error'); }
-      setPwLoading(false);
-    }, 400);
+    const r = await changePassword(currentPw, newPw);
+    if (r.success) { addToast('Password changed', 'success'); setCurrentPw(''); setNewPw(''); setConfirmPw(''); }
+    else            { addToast(r.error || 'Failed', 'error'); }
+    setPwLoading(false);
   };
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [

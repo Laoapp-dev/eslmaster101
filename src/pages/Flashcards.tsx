@@ -8,7 +8,7 @@ import { useApp } from '@/App';
 import { useNavigate } from 'react-router-dom';
 import { useSpeech } from '@/hooks/useSpeech';
 import type { VocabularyWord, CEFRLevel } from '@/types/vocabulary';
-import { CEFR_ORDER, UNLOCK_PCT, getMasteryPct, isLevelUnlocked, getPretestLevel } from '@/lib/levelLock';
+import { CEFR_ORDER, UNLOCK_PCT, getMasteryPct, isLevelUnlocked, usePretestLevel } from '@/lib/levelLock';
 import { POS_COLORS, CEFR_STYLE, DiffDots, StarButton } from '@/components/FlashcardVisuals';
 
 // Visual tokens (POS_COLORS, CEFR_STYLE, DIFF_STYLE, DiffDots, StarButton)
@@ -25,7 +25,7 @@ export function Flashcards() {
   const navigate = useNavigate();
 
   // Read the current user's pretest level (shared helper — see src/lib/levelLock.ts)
-  const pretestLevel: string | undefined = getPretestLevel();
+  const pretestLevel: string | undefined = usePretestLevel();
 
   // Session filter set by Favorites / LevelJourney / Categories pages.
   // NOTE: this used to be parsed as JSON (`JSON.parse(ssFilter)`), but

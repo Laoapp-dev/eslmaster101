@@ -1,4 +1,5 @@
 import type { VocabularyWord, CEFRLevel } from '@/types/vocabulary';
+import { useAuth } from '@/hooks/useAuth';
 
 // ── Level mastery / unlock rules ─────────────────────────────────────────────
 // Shared by every study mode (Flashcards, Quiz, Matching, Spelling) so a level
@@ -30,20 +31,13 @@ export function isLevelUnlocked(
   return getMasteryPct(words, prevLevel) >= UNLOCK_PCT;
 }
 
-// Read the current user's pretest level from localStorage (via auth session).
-// Wrapped in try/catch since localStorage/JSON parsing can fail (private
-// browsing, corrupted data, etc.) and this must never crash a study page.
-export function getPretestLevel(): string | undefined {
-  try {
-    const sess = localStorage.getItem('lexicon_auth_session');
-    if (!sess) return undefined;
-    const { userId } = JSON.parse(sess);
-    const users = JSON.parse(localStorage.getItem('lexicon_auth_users') || '[]');
-    const u = users.find((x: any) => x.id === userId);
-    return u?.pretestLevel;
-  } catch {
-    return undefined;
-  }
+// The current user's pretest level now comes from the authenticated
+// session (Cloudflare D1), not a raw localStorage read of the old
+// client-only auth store. This is a hook (not a plain function) since it
+// needs the AuthProvider context.
+export function usePretestLevel(): string | undefined {
+  const { currentUser } = useAuth();
+  return currentUser?.pretestLevel;
 }
 
 // ── Session composition helpers ──────────────────────────────────────────────

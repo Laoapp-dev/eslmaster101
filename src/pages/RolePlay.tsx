@@ -22,10 +22,10 @@ import {
   Users, GraduationCap, Home, Phone, Stethoscope, Car,
   SkipForward, Award, TrendingUp, MessageCircle
 } from 'lucide-react';
+import { adminConfig } from '@/lib/adminConfig';
+import { cloudStorage } from '@/lib/cloudStorage';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-/** Admin-only storage key — users never see this in Settings UI */
-const ADMIN_API_KEYS_KEY = 'moe_admin_api_cfg';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
@@ -181,10 +181,8 @@ const LESSONS: Lesson[] = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getAdminKeys(): { google?: string; groq?: string; elevenlabs?: string; elevenVoice?: string } {
-  try {
-    const raw = localStorage.getItem(ADMIN_API_KEYS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+  const cfg = adminConfig.get();
+  return { google: cfg.google, elevenlabs: cfg.elevenlabs, elevenVoice: cfg.elevenVoice };
 }
 
 const DEFAULT_ELEVEN_VOICE = 'EXAVITQu4vr4xnSDxMaL'; // ElevenLabs "Sarah"
@@ -499,7 +497,7 @@ export function RolePlay() {
   const [error, setError] = useState('');
   const [lessonDone, setLessonDone] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('moe_rp_done') || '[]')); } catch { return new Set(); }
+    try { return new Set(JSON.parse(cloudStorage.getItem('moe_rp_done') || '[]')); } catch { return new Set(); }
   });
   const [showLevelPicker, setShowLevelPicker] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
@@ -677,7 +675,7 @@ export function RolePlay() {
         setCompletedLessons(prev => {
           const updated = new Set([...prev, selectedLesson!.id]);
           try {
-            localStorage.setItem('moe_rp_done', JSON.stringify([...updated]));
+            cloudStorage.setItem('moe_rp_done', JSON.stringify([...updated]));
           } catch { /* storage full — completion still tracked in memory for this session */ }
           return updated;
         });

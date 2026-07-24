@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle, XCircle, Volume2, Award, Lock } from 'lucide-r
 import { useApp } from '@/App';
 import { useSpeech } from '@/hooks/useSpeech';
 import type { CEFRLevel, QuizType, QuizQuestion } from '@/types/vocabulary';
-import { getMasteryPct, isLevelUnlocked, getPretestLevel, UNLOCK_PCT, randomSessionSize, pickDiverseSample } from '@/lib/levelLock';
+import { getMasteryPct, isLevelUnlocked, usePretestLevel, UNLOCK_PCT, randomSessionSize, pickDiverseSample } from '@/lib/levelLock';
 
 const MIN_QUESTIONS = 10;
 const MAX_QUESTIONS = 20;
@@ -12,7 +12,7 @@ const MAX_QUESTIONS = 20;
 export function Quiz() {
   const { vocabulary } = useApp();
   const { speak } = useSpeech();
-  const pretestLevel = getPretestLevel();
+  const pretestLevel = usePretestLevel();
   const [selectedLevel, setSelectedLevel] = useState<CEFRLevel | 'all'>('all');
   const [quizType, setQuizType] = useState<QuizType>('definition');
   const [showSetup, setShowSetup] = useState(true);

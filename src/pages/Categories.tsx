@@ -20,7 +20,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/App';
 import type { CEFRLevel, VocabularyWord } from '@/types/vocabulary';
-import { CEFR_ORDER, UNLOCK_PCT, isLevelUnlocked, getPretestLevel } from '@/lib/levelLock';
+import { CEFR_ORDER, UNLOCK_PCT, isLevelUnlocked, usePretestLevel } from '@/lib/levelLock';
 
 const MODES = [
   { path: '/study/flashcards', label: 'Flashcards', icon: Layers,     desc: 'Flip cards to learn' },
@@ -58,7 +58,7 @@ interface CategoryStats {
 export function Categories() {
   const { vocabulary } = useApp();
   const navigate = useNavigate();
-  const pretestLevel = getPretestLevel();
+  const pretestLevel = usePretestLevel();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [levelChoice, setLevelChoice] = useState<Record<string, CEFRLevel | 'all'>>({});

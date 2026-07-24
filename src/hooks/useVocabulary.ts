@@ -1,17 +1,20 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { cloudStorage } from '@/lib/cloudStorage';
 import type { VocabularyWord, CEFRLevel, StudySession, UserProfile, AppSettings, FilterLevel, SortOption, Achievement } from '@/types/vocabulary';
 
-function makeStorageKeys(prefix?: string) {
-  const p = prefix || 'lexicon';
-  return {
-    words: `${p}_words`,
-    sessions: `${p}_sessions`,
-    profile: `${p}_profile`,
-    settings: `${p}_settings`,
-    achievements: `${p}_achievements`,
-  };
-}
+// Storage keys used to be namespaced per-account (`lexicon_<id>_words`)
+// because everything lived in one shared browser localStorage. Now each
+// account's data is its own isolated row in Cloudflare D1 (see
+// /functions/api/data), so a single fixed set of keys is all that's
+// needed — cloudStorage already only ever holds the signed-in user's data.
+const KEYS = {
+  words: 'lexicon_words',
+  sessions: 'lexicon_sessions',
+  profile: 'lexicon_profile',
+  settings: 'lexicon_settings',
+  achievements: 'lexicon_achievements',
+};
 
 const DEFAULT_PROFILE: UserProfile = {
   username: 'Learner',
@@ -46,7 +49,7 @@ const ACHIEVEMENTS: Achievement[] = [
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
-    const item = localStorage.getItem(key);
+    const item = cloudStorage.getItem(key);
     return item ? JSON.parse(item) : fallback;
   } catch {
     return fallback;
@@ -91,23 +94,21 @@ function sanitizeWords(arr: unknown): VocabularyWord[] {
 
 function saveToStorage<T>(key: string, value: T): boolean {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    cloudStorage.setItem(key, JSON.stringify(value));
     return true;
   } catch (error) {
-    console.error(`Error saving to localStorage:`, error);
+    console.error(`Error saving to cloud storage:`, error);
     return false;
   }
 }
 
-export function useVocabulary(dataKeyPrefix?: string) {
-  const KEYS = useMemo(() => makeStorageKeys(dataKeyPrefix), [dataKeyPrefix]);
-
+export function useVocabulary() {
   // ── Storage architecture ─────────────────────────────────────────────────
   // Two small, local-only layers — nothing ever leaves this browser and
   // nothing is fetched from a network service:
   //
   //   • baseWords    — the full 9,000+ word ESL curriculum, shipped as
-  //                     src/data/defaultVocabulary.json directly inside the
+  //                     public/data/vocabulary.json directly inside the
   //                     app's code. Loaded straight into memory on mount
   //                     (its own separate JS chunk, fetched only after first
   //                     paint so it never blocks initial render). It is
@@ -141,19 +142,29 @@ export function useVocabulary(dataKeyPrefix?: string) {
   const [baseLoaded, setBaseLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    import('@/data/defaultVocabulary.json').then((mod) => {
-      if (cancelled) return;
-      const raw = (mod as { default?: unknown }).default ?? mod;
-      if (Array.isArray(raw)) {
-        const withIds = raw.map((w: any, i: number) => ({ ...w, id: `base-${i}` }));
-        setBaseWords(sanitizeWords(withIds));
-      }
-      setBaseLoaded(true);
-    }).catch(() => {
-      // Base curriculum chunk failed to load — non-fatal, app still works
-      // with any manually-added words.
-      setBaseLoaded(true);
-    });
+    // Fetched as a plain static JSON file (public/data/vocabulary.json)
+    // rather than imported as a JS module. This keeps the curriculum out
+    // of the JS bundle entirely — no minification cost, no impact on the
+    // service worker's precache size limit, and it scales cleanly as the
+    // word list grows into the tens of thousands.
+    fetch(`${import.meta.env.BASE_URL}data/vocabulary.json`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`vocabulary.json ${res.status}`);
+        return res.json();
+      })
+      .then((raw) => {
+        if (cancelled) return;
+        if (Array.isArray(raw)) {
+          const withIds = raw.map((w: any, i: number) => ({ ...w, id: `base-${i}` }));
+          setBaseWords(sanitizeWords(withIds));
+        }
+        setBaseLoaded(true);
+      })
+      .catch(() => {
+        // Base curriculum failed to load — non-fatal, app still works
+        // with any manually-added words.
+        setBaseLoaded(true);
+      });
     return () => { cancelled = true; };
   }, []);
 

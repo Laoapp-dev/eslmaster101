@@ -1,25 +1,28 @@
 import { useState, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { cloudStorage } from '@/lib/cloudStorage';
 import type { PracticeSubmission, AIFeedback, SubmissionMode } from '@/types/practice';
 import type { CEFRLevel } from '@/data/speakingTopics';
 
-function storageKey(prefix?: string) {
-  const p = prefix || 'lexicon';
-  return `${p}_practice_submissions`;
-}
+// Was namespaced per-account (`lexicon_<id>_practice_submissions`) back
+// when everything lived in one shared browser localStorage. Now each
+// account's data is its own row in Cloudflare D1, so a fixed key is fine
+// — the `prefix` param is kept only so existing call sites don't need
+// changes, but it no longer affects where the data is stored.
+const STORAGE_KEY = 'lexicon_practice_submissions';
 
-function loadSubmissions(prefix?: string): PracticeSubmission[] {
+function loadSubmissions(_prefix?: string): PracticeSubmission[] {
   try {
-    const raw = localStorage.getItem(storageKey(prefix));
+    const raw = cloudStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-function saveSubmissions(prefix: string | undefined, subs: PracticeSubmission[]) {
+function saveSubmissions(_prefix: string | undefined, subs: PracticeSubmission[]) {
   try {
-    localStorage.setItem(storageKey(prefix), JSON.stringify(subs));
+    cloudStorage.setItem(STORAGE_KEY, JSON.stringify(subs));
   } catch {
     // Storage full or unavailable — fail silently, user keeps using the app
   }
